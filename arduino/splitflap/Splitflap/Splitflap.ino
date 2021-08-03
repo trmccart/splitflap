@@ -102,7 +102,7 @@ void setup() {
 
   initialize_modules();
   motor_sensor_io();
-
+  
 #ifdef OUTPUT_ENABLE_PIN
   // Wait until after 1 motor_sensor_io to turn on shift register outputs
   pinMode(OUTPUT_ENABLE_PIN, OUTPUT);
@@ -204,6 +204,8 @@ uint8_t recv_count = 0;
 
 bool disabled = false;
 
+bool msg_open = true;
+
 void disableAll(char* message) {
   for (uint8_t i = 0; i < NUM_MODULES; i++) {
     modules[i]->Disable();
@@ -225,10 +227,15 @@ void disableAll(char* message) {
 boolean was_stopped = false;
 uint32_t stopped_at_millis = 0;
 
+
 inline void run_iteration() {
     uint32_t iterationStartMillis = millis();
     boolean all_idle = true;
     boolean all_stopped = true;
+    // try and add a buttonstate 
+    int buttonState = 0;
+
+
     for (uint8_t i = 0; i < NUM_MODULES; i++) {
       modules[i]->Update();
       bool is_idle = modules[i]->state == PANIC
@@ -264,6 +271,35 @@ inline void run_iteration() {
 #endif
 
     if (all_idle) {
+      // try checking button state before we check serial?
+      buttonState = digitalRead(BUTTON_PIN);
+      //bool msg_open;
+      String msg_buffer;
+      
+      if (buttonState == HIGH) {
+        // button was pressed, send a message
+        Serial.print("button pressed\n");
+        if (msg_open == true) {
+          msg_buffer = "shut";
+          msg_open = !msg_open;
+        } else {
+          msg_buffer = "open";
+          msg_open = !msg_open;
+        }
+        recv_count = 4;
+        for (uint8_t i = 0; i < recv_count; i++) {
+          int8_t index = FindFlapIndex(msg_buffer[i], modules[i]->GetCurrentFlapIndex());
+          if (index != -1) {
+            if (FORCE_FULL_ROTATION || index != modules[i]->GetTargetFlapIndex()) {
+              modules[i]->GoToFlapIndex(index);
+            }
+          }
+        }
+        //Serial.flush();
+      } else {
+        // button has not been pressed
+        // Serial.print("button pressed - low\n");
+      }
 #if NEOPIXEL_DEBUGGING_ENABLED
       for (int i = 0; i < NUM_MODULES; i++) {
         uint32_t color = 0;

@@ -28,6 +28,10 @@
   #define _IN_LATCH_PORT PORTD
   #define _IN_LATCH_BIT 5
 
+  // try and add a button to this 
+  // const int buttonPin = 2;
+  #define BUTTON_PIN (9)
+  
   #define OUT_LATCH(){\
     _OUT_LATCH_PORT |= (1 << _OUT_LATCH_BIT);\
     _OUT_LATCH_PORT &= ~(1 << _OUT_LATCH_BIT);\
@@ -159,6 +163,12 @@ inline void initialize_modules() {
   pinMode(LATCH_PIN, OUTPUT);
   digitalWrite(LATCH_PIN, LOW);
 #endif
+
+#ifdef BUTTON_PIN
+  pinMode(BUTTON_PIN, INPUT);
+#endif
+
+pinMode(BUTTON_PIN, INPUT);
 
 #ifdef ESP32
 
