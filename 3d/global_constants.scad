@@ -1,5 +1,5 @@
 /*
-   Copyright 2015-2018 Scott Bezek and the splitflap contributors
+   Copyright 2015-2021 Scott Bezek and the splitflap contributors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,14 +14,8 @@
    limitations under the License.
 */
 
-// M4 bolts
-m4_hole_diameter = 4.5;
-m4_bolt_length = 10;
-m4_button_head_diameter = 7.6 + .2;
-m4_button_head_length = 2.2 + .2;
-m4_nut_width_flats = 7 + .2;
-m4_nut_width_corners = 7/cos(180/6);
-m4_nut_width_corners_padded = m4_nut_width_corners + .2;
-m4_nut_length = 3.2;
-m4_nut_length_padded = m4_nut_length + .2;
+// Almost nothing should be a global constant. Think hard before adding to this file.
 
+// "Epsilon" - a small error tolerance value, used when designing 3d parts to avoid exact complanar faces that cause OpenSCAD rendering artifacts
+// See https://3dprinting.stackexchange.com/a/9795
+eps=0.01;

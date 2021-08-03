@@ -1,5 +1,5 @@
 /*
-   Copyright 2015-2018 Scott Bezek and the splitflap contributors
+   Copyright 2015-2021 Scott Bezek and the splitflap contributors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,14 +14,10 @@
    limitations under the License.
 */
 
-// M4 bolts
-m4_hole_diameter = 4.5;
-m4_bolt_length = 10;
-m4_button_head_diameter = 7.6 + .2;
-m4_button_head_length = 2.2 + .2;
-m4_nut_width_flats = 7 + .2;
-m4_nut_width_corners = 7/cos(180/6);
-m4_nut_width_corners_padded = m4_nut_width_corners + .2;
-m4_nut_length = 3.2;
-m4_nut_length_padded = m4_nut_length + .2;
+// multiply two equal matricies by each element, limiting to a max of 1.0
+function color_multiply(x, y) =
+    [ for(j=[0:len(x) - 1]) min(x[j] * y[j], 1.0) ];
 
+// inverts a color matrix by subtracting the input channel values from 1.0
+function color_invert(x) =
+    [ for(j=[0:len(x) - 1]) (1.0 - x[j]) ];

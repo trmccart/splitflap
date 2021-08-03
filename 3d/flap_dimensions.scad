@@ -21,6 +21,9 @@ flap_corner_radius = 3.1; // 2.88-3.48mm (used just for display)
 
 flap_notch_height_auto = false;
 flap_notch_height_default = 15;
+
+flap_notch_height = (flap_notch_height_auto == true) ? sqrt(spool_outer_radius*spool_outer_radius - flap_pitch_radius*flap_pitch_radius) : flap_notch_height_default;
+
 flap_notch_depth = 3.2;
 
 flap_pin_width = 1.4;
