@@ -120,7 +120,7 @@ flap_width_slop = 0.5;  // amount of slop of the flap side to side between the 2
 
 spool_width_slop = 1.4;  // amount of slop for the spool assembly side-to-side inside the enclosure
 
-spool_tab_clearance = -0.06;  // for the tabs connecting the struts to the spool ends (interference fit)
+spool_tab_clearance = 0;  // for the tabs connecting the struts to the spool ends (interference fit)
 spool_retaining_clearance = 0.10;  // for the notches in the spool retaining wall
 spool_joint_clearance = 0.10;  // for the notched joints on the spool struts
 
@@ -156,9 +156,10 @@ spool_strut_inner_length = spool_width - 3 * thickness;
 
 spool_strut_exclusion_radius = sqrt((spool_strut_tab_outset+thickness/2)*(spool_strut_tab_outset+thickness/2) + (spool_strut_tab_width/2)*(spool_strut_tab_width/2));
 
+m4_axle_hole_diameter = 4.3;    // Slightly closer fit than the standard m4_hole_diameter, since a loose fit here will cause the spool to sit at a slight angle
 
 magnet_diameter = 4;
-magnet_hole_clearance = -0.07;  // interference fit
+magnet_hole_clearance = -0.05;  // interference fit
 magnet_hole_radius = (magnet_diameter + magnet_hole_clearance)/2;
 magnet_hole_offset = (spool_strut_exclusion_radius + flap_pitch_radius)/2;
 
@@ -258,6 +259,7 @@ function get_connector_bracket_length() = connector_bracket_length_outer;
 function get_connector_bracket_width() = connector_bracket_width;
 function get_enclosure_height() = enclosure_height;
 function get_enclosure_height_lower() = enclosure_height_lower;
+function get_enclosure_height_upper() = enclosure_height_upper;
 function get_enclosure_length_right() = enclosure_length_right;
 function get_enclosure_vertical_inset() = enclosure_vertical_inset;
 function get_enclosure_wall_to_wall_width() = enclosure_wall_to_wall_width;
@@ -465,15 +467,14 @@ module motor_shaft() {
     }
 }
 
-module front_tabs_negative(upper, tool_diameter=undef) {
+module front_tabs_negative(upper, tool_diameter=0) {
     // tool_diameter is an optional parameter to adjust these cutouts to compensate for a rotary cutting tool, which
     // requires "dog-bones" for corners and adjustment of the cutout if the tool is larger than thickness. This will
     // generally not look good if cut all the way through the material, but with a CNC router these can be cut as
     // pockets which are not visible from the front.
-    tool_diameter_param = is_undef(tool_diameter) ? 0 : tool_diameter;
-    assert(tool_diameter_param <= m4_hole_diameter, "Tool diameter is too large to cut M4 holes");
+    assert(tool_diameter <= m4_hole_diameter, "Tool diameter is too large to cut M4 holes");
 
-    cutout_height = max(thickness, tool_diameter_param);
+    cutout_height = max(thickness, tool_diameter);
 
     // Offset is inverted on upper vs lower so that larger cutouts from tool diameter don't allow vertical movement freedom
     cutout_offset = (upper ? 1 : -1) * (cutout_height - thickness)/2;
@@ -483,26 +484,26 @@ module front_tabs_negative(upper, tool_diameter=undef) {
             square([front_tab_width + enclosure_tab_clearance, cutout_height + enclosure_tab_clearance], center=true);
 
             // Dog-bones
-            if (!is_undef(tool_diameter)) {
-                // Dog-bones are rendered as squares to simplify the number of lines in the final SVG output
-                translate([(front_tab_width + enclosure_tab_clearance)/2 - tool_diameter_param/2, (cutout_height + enclosure_tab_clearance)/2]) {
-                    square([tool_diameter_param, tool_diameter_param], center=true);
+            if (tool_diameter > 0) {
+                // Dog-bones are rendered as squares to simplify the number of line segments in the final SVG output
+                translate([(front_tab_width + enclosure_tab_clearance)/2 - tool_diameter/2, (cutout_height + enclosure_tab_clearance)/2]) {
+                    square([tool_diameter, tool_diameter], center=true);
                 }
-                translate([(front_tab_width + enclosure_tab_clearance)/2 - tool_diameter_param/2, -(cutout_height + enclosure_tab_clearance)/2]) {
-                    square([tool_diameter_param, tool_diameter_param], center=true);
+                translate([(front_tab_width + enclosure_tab_clearance)/2 - tool_diameter/2, -(cutout_height + enclosure_tab_clearance)/2]) {
+                    square([tool_diameter, tool_diameter], center=true);
                 }
-                translate([-(front_tab_width + enclosure_tab_clearance)/2 + tool_diameter_param/2, (cutout_height + enclosure_tab_clearance)/2]) {
-                    square([tool_diameter_param, tool_diameter_param], center=true);
+                translate([-(front_tab_width + enclosure_tab_clearance)/2 + tool_diameter/2, (cutout_height + enclosure_tab_clearance)/2]) {
+                    square([tool_diameter, tool_diameter], center=true);
                 }
-                translate([-(front_tab_width + enclosure_tab_clearance)/2 + tool_diameter_param/2, -(cutout_height + enclosure_tab_clearance)/2]) {
-                    square([tool_diameter_param, tool_diameter_param], center=true);
+                translate([-(front_tab_width + enclosure_tab_clearance)/2 + tool_diameter/2, -(cutout_height + enclosure_tab_clearance)/2]) {
+                    square([tool_diameter, tool_diameter], center=true);
                 }
             }
         }
     }
     for (i = [0 : num_front_tabs-2]) {
         translate([thickness + (i*2+1.5) * front_tab_width, 0, 0]) {
-            if (is_undef(tool_diameter)) {
+            if (tool_diameter == 0) {
                 circle(r=m4_hole_diameter/2, $fn=30);
             } else {
                 square([m4_hole_diameter, m4_hole_diameter], center=true);
@@ -545,7 +546,7 @@ module enclosure_front_base_2d() {
     }
 }
 
-module enclosure_front_cutouts_2d(tool_diameter=undef) {
+module enclosure_front_cutouts_2d(tool_diameter=0) {
     // Viewing window cutout
     translate([front_window_right_inset, enclosure_height_lower - front_window_lower])
         square([front_window_width, front_window_lower + front_window_upper]);
@@ -758,7 +759,7 @@ module enclosure_right() {
         difference() {
             square([enclosure_height, enclosure_length_right]);
             translate([enclosure_height_upper, enclosure_length_right - front_forward_offset, 0])
-                circle(r=m4_hole_diameter/2, $fn=30);
+                circle(r=m4_axle_hole_diameter/2, $fn=30);
 
             // backstop bolt slot
             translate([enclosure_height_upper - backstop_bolt_vertical_offset, enclosure_length_right - front_forward_offset, 0]) {
